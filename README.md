@@ -31,30 +31,38 @@ Key features:
 
 ## Quickstart
 
-### 1. Install
+### Option A: Claude Code (recommended)
+
+If you have [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with a Max or Team subscription:
 
 ```bash
 git clone https://github.com/tolmachevmaxim/ai-news-digest.git
 cd ai-news-digest
 pip install -e .
+claude
 ```
 
-### 2. Setup (interactive)
+Then just say: **"Set up a news digest for me"**
+
+Claude reads the project's `CLAUDE.md` and guides you through a conversational onboarding — asks about your topics, helps create a Telegram bot, learns your writing style from examples you paste, and runs a test digest. You can go off-script, ask questions, change your mind.
+
+### Option B: CLI setup (no Claude Code)
 
 ```bash
+git clone https://github.com/tolmachevmaxim/ai-news-digest.git
+cd ai-news-digest
+pip install -e .
 python -m news_digest setup
 ```
 
-The setup wizard will ask you:
-1. **Anthropic API key** — get at [console.anthropic.com](https://console.anthropic.com/settings/keys)
-2. **Telegram bot** — create via [@BotFather](https://t.me/BotFather), add as admin to your channel
-3. **Topics** — pick from presets (AI/ML, startups, crypto...) or add custom RSS feeds
-4. **Your writing samples** — paste 3-5 examples of your posts/tweets/messages
+The setup wizard walks you through:
+1. **LLM backend** — Anthropic API key or Claude Code CLI
+2. **Telegram bot** — step-by-step guide + automatic verification
+3. **Topics & feeds** — pick from 10 preset packs or add custom RSS
+4. **Your writing samples** — paste 3-5 examples, AI generates your style profile
 5. **Preferences** — language, digest size, models
 
-The AI analyzes your samples and creates a style profile. Your digest will sound like **you**, not like ChatGPT.
-
-### 3. Run
+### Run
 
 ```bash
 # Preview without sending
