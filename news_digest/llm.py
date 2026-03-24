@@ -305,9 +305,19 @@ Selected news (JSON). Write the post:
         output = _call_llm(prompt, cfg.get("writer_model", "claude-sonnet-4-20250514"), cfg)
 
         # Strip code fences
-        cleaned = re.sub(r"^```(?:html)?\s*", "", output)
-        cleaned = re.sub(r"\s*```$", "", cleaned)
-        return cleaned.strip()
+        cleaned = output
+        fence_match = re.search(r"```(?:html)?\s*\n(.*?)\n\s*```", cleaned, re.DOTALL)
+        if fence_match:
+            cleaned = fence_match.group(1)
+        else:
+            cleaned = re.sub(r"^```(?:html)?\s*\n?", "", cleaned)
+            cleaned = re.sub(r"\n?\s*```\s*$", "", cleaned)
+
+        result_text = cleaned.strip()
+        if len(result_text) < 100:
+            log.error(f"Writer returned too short ({len(result_text)} chars): {result_text[:100]}")
+            return ""
+        return result_text
 
     except Exception as e:
         log.error(f"Writer failed: {e}")
