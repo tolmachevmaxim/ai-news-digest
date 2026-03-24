@@ -1,0 +1,10 @@
+config.yaml
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.env
+ai_news_digest.egg-info/
