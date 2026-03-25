@@ -178,7 +178,7 @@ def _call_claude_code(prompt: str, model: str, cfg: dict, timeout: int = 180) ->
     return output
 
 
-def select_news(items: list[dict], cfg: dict) -> list[dict]:
+def select_news(items: list[dict], cfg: dict, published_titles: list[str] | None = None) -> list[dict]:
     """Use fast model to select top news items. Returns structured JSON."""
     if not items:
         return []
@@ -194,8 +194,16 @@ def select_news(items: list[dict], cfg: dict) -> list[dict]:
         else "Write titles in English."
     )
 
-    prompt = f"""You are a news editor. From the list below, select the {digest_size} most important items.
+    dedup_block = ""
+    if published_titles:
+        titles_text = "\n".join(published_titles[-50:])
+        dedup_block = f"""
+DEDUPLICATION — these topics were already covered in recent digests. Do NOT select them again (even if the URL is different):
+{titles_text}
+"""
 
+    prompt = f"""You are a news editor. From the list below, select the {digest_size} most important items.
+{dedup_block}
 Return ONLY a JSON array. Each element:
 {{
   "title": "headline — {lang_instruction}",

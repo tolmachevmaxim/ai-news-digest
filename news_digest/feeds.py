@@ -100,17 +100,58 @@ def load_seen(state_file: str) -> set:
         return set()
 
 
-def save_seen(seen: set, state_file: str, max_seen: int = 1000):
+def save_seen(seen: set, state_file: str, max_seen: int = 3000):
     """Save seen URLs to state file."""
     path = Path(state_file)
     path.parent.mkdir(parents=True, exist_ok=True)
     urls = sorted(seen)[-max_seen:]
-    path.write_text(
-        json.dumps(
-            {"urls": urls, "updated": datetime.now().isoformat()},
-            ensure_ascii=False,
-        )
-    )
+    # Preserve published_titles if they exist
+    existing = {}
+    if path.exists():
+        try:
+            existing = json.loads(path.read_text())
+        except (json.JSONDecodeError, KeyError):
+            pass
+    data = {
+        "urls": urls,
+        "updated": datetime.now().isoformat(),
+        "published_titles": existing.get("published_titles", []),
+    }
+    path.write_text(json.dumps(data, ensure_ascii=False))
+
+
+def load_published_titles(state_file: str) -> list[str]:
+    """Load titles of previously published news for semantic dedup."""
+    path = Path(state_file)
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text())
+        return data.get("published_titles", [])
+    except (json.JSONDecodeError, KeyError):
+        return []
+
+
+def save_published_titles(titles: list[str], state_file: str, max_titles: int = 100):
+    """Append new titles to published history."""
+    path = Path(state_file)
+    existing = []
+    if path.exists():
+        try:
+            data = json.loads(path.read_text())
+            existing = data.get("published_titles", [])
+        except (json.JSONDecodeError, KeyError):
+            pass
+    all_titles = (existing + titles)[-max_titles:]
+    # Read full state and update
+    state = {}
+    if path.exists():
+        try:
+            state = json.loads(path.read_text())
+        except (json.JSONDecodeError, KeyError):
+            pass
+    state["published_titles"] = all_titles
+    path.write_text(json.dumps(state, ensure_ascii=False))
 
 
 # --- Helpers ---

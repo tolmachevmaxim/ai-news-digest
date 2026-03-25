@@ -60,7 +60,9 @@ def _run_digest(config_path: Path, dry_run: bool = False):
         filter_new,
         filter_recent,
         filter_relevant,
+        load_published_titles,
         load_seen,
+        save_published_titles,
         save_seen,
     )
     from .llm import render_fallback, select_news, write_digest
@@ -95,9 +97,11 @@ def _run_digest(config_path: Path, dry_run: bool = False):
         save_seen(seen | new_urls, cfg["state_file"], cfg["max_seen"])
         return
 
-    # 4. Select top news (fast model)
+    # 4. Select top news (fast model) with semantic dedup
+    published_titles = load_published_titles(cfg["state_file"])
+    log.info(f"Loaded {len(published_titles)} published titles for dedup")
     log.info("Selecting top news...")
-    selected = select_news(relevant, cfg)
+    selected = select_news(relevant, cfg, published_titles=published_titles)
     if not selected:
         log.error("Selection failed, no news selected")
         return
@@ -122,10 +126,12 @@ def _run_digest(config_path: Path, dry_run: bool = False):
         send_telegram(digest, cfg["telegram_bot_token"], cfg["telegram_channel"])
         log.info("Digest sent successfully")
 
-    # 7. Save seen URLs
+    # 7. Save seen URLs + published titles
     new_urls = {item["url"] for item in all_items}
     save_seen(seen | new_urls, cfg["state_file"], cfg["max_seen"])
-    log.info(f"Saved {len(seen | new_urls)} seen URLs")
+    new_titles = [item.get("title", "") for item in selected if item.get("title")]
+    save_published_titles(new_titles, cfg["state_file"])
+    log.info(f"Saved {len(seen | new_urls)} seen URLs, {len(new_titles)} new titles")
 
     log.info("=== AI News Digest done ===")
 
